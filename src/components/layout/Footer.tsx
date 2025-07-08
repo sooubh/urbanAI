@@ -111,15 +111,15 @@ export function Footer() {
               © 2025 Urban Harvest AI. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors duration-200">
                 Privacy
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              </Link>
+              <Link to="/terms" className="text-gray-400 hover:text-white transition-colors duration-200">
                 Terms
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              </Link>
+              <Link to="/cookies" className="text-gray-400 hover:text-white transition-colors duration-200">
                 Cookies
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useAI } from '../hooks/useAI';
 import { DualAIResponse } from '../services/aiOrchestrator';
 import { GARDEN_TYPES, SUNLIGHT_REQUIREMENTS } from '../utils/constants';
+import { useUser, SignInButton } from '@clerk/clerk-react';
 
 interface GardenPlanForm {
   gardenType: string;
@@ -45,6 +46,7 @@ export function GardenPlanner() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [dualResponse, setDualResponse] = useState<DualAIResponse | null>(null);
   const { generateDualResponse } = useAI({ type: 'planning' });
+  const { isSignedIn } = useUser();
 
   const totalSteps = 4;
 
@@ -70,29 +72,11 @@ export function GardenPlanner() {
   };
 
   const generatePlan = async () => {
+    if (!isSignedIn) return;
     setIsGenerating(true);
     
     try {
-      const planningPrompt = `Create a detailed garden plan for the following specifications:
-
-Garden Type: ${formData.gardenType}
-Dimensions: ${formData.dimensions.length} x ${formData.dimensions.width} ${formData.dimensions.unit}
-Sunlight: ${formData.sunlightHours} hours daily
-Location: ${formData.location}
-Experience Level: ${formData.experience}
-Goals: ${formData.goals.join(', ')}
-
-Please provide:
-1. Specific plant recommendations with scientific names
-2. Spacing requirements for each plant
-3. Expected harvest times
-4. Care difficulty levels
-5. Benefits of each plant for urban gardening
-6. Layout suggestions for optimal space usage
-7. Seasonal planting schedule
-8. Companion planting recommendations
-
-Format the response with clear sections and practical advice for urban gardening success.`;
+      const planningPrompt = `Create a detailed garden plan for the following specifications:\n\nGarden Type: ${formData.gardenType}\nDimensions: ${formData.dimensions.length} x ${formData.dimensions.width} ${formData.dimensions.unit}\nSunlight: ${formData.sunlightHours} hours daily\nLocation: ${formData.location}\nExperience Level: ${formData.experience}\nGoals: ${formData.goals.join(', ')}\n\nPlease provide:\n1. Specific plant recommendations with scientific names\n2. Spacing requirements for each plant\n3. Expected harvest times\n4. Care difficulty levels\n5. Benefits of each plant for urban gardening\n6. Layout suggestions for optimal space usage\n7. Seasonal planting schedule\n8. Companion planting recommendations\n\nFormat the response with clear sections and practical advice for urban gardening success.`;
 
       const responses = await generateDualResponse(planningPrompt);
       setDualResponse(responses);
@@ -347,60 +331,25 @@ Format the response with clear sections and practical advice for urban gardening
         return (
           <Card variant="elevated">
             <CardHeader>
-              <CardTitle>Review Your Garden Plan</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Lightbulb className="h-5 w-5 text-primary-600" />
+                <span>Get Recommendations</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Garden Type</h4>
-                    <p className="text-gray-600 capitalize">{formData.gardenType.replace('-', ' ')}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Dimensions</h4>
-                    <p className="text-gray-600">
-                      {formData.dimensions.length} × {formData.dimensions.width} {formData.dimensions.unit}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Sunlight</h4>
-                    <p className="text-gray-600">{formData.sunlightHours} hours daily</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900">Location</h4>
-                    <p className="text-gray-600">{formData.location}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Experience</h4>
-                    <p className="text-gray-600 capitalize">{formData.experience}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Goals</h4>
-                    <p className="text-gray-600">{formData.goals.join(', ')}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center pt-6">
-                <Button
-                  size="lg"
-                  onClick={generatePlan}
-                  isLoading={isGenerating}
-                  className="group"
-                >
-                  {isGenerating ? (
-                    'Generating Your Garden Plan...'
-                  ) : (
-                    <>
-                      Generate My Garden Plan
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                size="lg"
+                onClick={isSignedIn ? generatePlan : undefined}
+                disabled={isGenerating || !isSignedIn}
+                isLoading={isGenerating}
+              >
+                Generate Plan
+              </Button>
+              {!isSignedIn && (
+                <SignInButton mode="modal">
+                  <Button variant="outline">Sign in to generate plan</Button>
+                </SignInButton>
+              )}
             </CardContent>
           </Card>
         );

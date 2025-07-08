@@ -6,12 +6,34 @@ import { Card } from '../components/ui/Card';
 import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useChat } from '../hooks/useChat';
 import { formatRelativeTime } from '../utils/helpers';
+import { useUser, SignInButton } from '@clerk/clerk-react';
+
+function renderFormattedText(text: string) {
+  // Split by lines for heading detection
+  return text.split('\n').map((line, idx) => {
+    // Heading: line starts with #
+    if (line.trim().startsWith('#')) {
+      return (
+        <h3 key={idx} className="font-bold text-lg mb-1">{line.replace(/^#+\s*/, '')}</h3>
+      );
+    }
+    // Bold: text between **
+    const parts = line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => {
+      if (/^\*\*[^*]+\*\*$/.test(part)) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+    return <span key={idx}>{parts}<br/></span>;
+  });
+}
 
 export function Chat() {
   const { messages, isLoading, pendingDualResponse, sendMessage, selectAIResponse, clearChat } = useChat();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, isSignedIn } = useUser();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,7 +46,7 @@ export function Chat() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
-
+    if (!isSignedIn) return;
     const message = inputValue.trim();
     setInputValue('');
     await sendMessage(message);
@@ -33,6 +55,7 @@ export function Chat() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!isSignedIn) return;
 
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -154,7 +177,7 @@ export function Chat() {
                             : 'bg-gray-100 text-gray-900'
                         }`}
                       >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{renderFormattedText(message.content)}</p>
                         <div className="flex items-center justify-between mt-2">
                           <p
                             className={`text-xs ${
@@ -196,55 +219,42 @@ export function Chat() {
 
           {/* Input Area */}
           <div className="border-t border-gray-200 p-6">
-            <form onSubmit={handleSubmit} className="flex items-end space-x-4">
-              <div className="flex-1">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask me anything about gardening..."
-                  disabled={isLoading}
-                  className="resize-none"
-                />
-              </div>
-              
-              <div className="flex space-x-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="md"
-                  onClick={clearChat}
-                  disabled={isLoading}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  type="submit"
-                  disabled={!inputValue.trim() || isLoading}
-                  isLoading={isLoading}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+            <form onSubmit={handleSubmit} className="flex items-center p-4 border-t border-gray-200 space-x-2">
+              <Input
+                type="text"
+                placeholder="Type your message..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                disabled={isLoading || !isSignedIn}
+              />
+              <Button type="submit" disabled={isLoading || !isSignedIn}>
+                <Send className="h-4 w-4" />
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={!isSignedIn}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!isSignedIn}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
             </form>
+            
+            {!isSignedIn && (
+              <div className="p-4 text-center text-gray-500">
+                <SignInButton mode="modal">
+                  <Button variant="outline">Sign in to chat</Button>
+                </SignInButton>
+              </div>
+            )}
             
             <p className="text-xs text-gray-500 mt-2">
               Upload plant photos for identification or ask questions. Responses from both OpenRouter and Gemini AI.

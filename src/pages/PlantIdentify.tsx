@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useAI } from '../hooks/useAI';
 import { DualAIResponse } from '../services/aiOrchestrator';
+import { useUser, SignInButton } from '@clerk/clerk-react';
 
 interface IdentificationResult {
   name: string;
@@ -16,6 +17,10 @@ interface IdentificationResult {
   imageUrl: string;
   provider: 'openrouter' | 'gemini';
   model: string;
+  disease: string;
+  diseaseExplanation: string;
+  healthyConfirmation: string;
+  careTips: string[];
 }
 
 export function PlantIdentify() {
@@ -25,6 +30,7 @@ export function PlantIdentify() {
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeDualImage } = useAI({ type: 'identification' });
+  const { isSignedIn } = useUser();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,15 +47,13 @@ export function PlantIdentify() {
 
   const handleIdentify = async () => {
     if (!selectedImage) return;
-
+    if (!isSignedIn) return;
     setIsIdentifying(true);
-    
     try {
       const responses = await analyzeDualImage(
         selectedImage,
-        'Identify this plant species and provide detailed information including: scientific name, common name, care instructions, watering needs, sunlight requirements, common problems, and growing tips for urban gardening. Be specific and practical.'
+        `You are a plant pathology and identification expert. Analyze the provided plant image and, using any available location data, return a JSON object with the following fields in this exact order:\n1. plant_name: Common name of the plant (e.g., Tomato, Rose)\n2. scientific_name: Scientific species name (e.g., Solanum lycopersicum)\n3. disease: Name of any visible disease or abnormality (or null if healthy)\n4. disease_explanation: Detailed explanation of the disease (causes, symptoms, spread, and treatment suggestions), or null if healthy\n5. healthy_confirmation: If no disease is detected, a confirmation message that the plant appears healthy\n6. care_tips: Optional care or preventive tips for this species\nReturn ONLY the JSON object, no extra text. The plant_name field must always be present and accurate.`
       );
-      
       setDualResponse(responses);
     } catch (error: any) {
       console.error('Error identifying plant:', error);
@@ -60,29 +64,44 @@ export function PlantIdentify() {
   };
 
   const handleSelectResponse = (responseText: string, provider: 'openrouter' | 'gemini') => {
-    // Parse the response and create a structured result
-    const mockResult: IdentificationResult = {
-      name: 'Identified Plant',
-      scientificName: 'Species name',
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (e) {
+      // fallback: show as unstructured text if not valid JSON
+      setResult({
+        name: 'Unknown',
+        scientificName: '',
+        confidence: 0,
+        description: responseText,
+        careInstructions: [],
+        commonIssues: [],
+        imageUrl: selectedImage || '',
+        provider,
+        model: dualResponse?.[provider]?.model || 'unknown',
+        disease: '',
+        diseaseExplanation: '',
+        healthyConfirmation: '',
+        careTips: [],
+      });
+      setDualResponse(null);
+      return;
+    }
+    setResult({
+      name: parsed.plant_name || 'Unknown',
+      scientificName: parsed.scientific_name || '',
       confidence: 95,
-      description: responseText.substring(0, 200) + '...',
-      careInstructions: [
-        'Water regularly but avoid overwatering',
-        'Provide adequate sunlight',
-        'Use well-draining soil',
-        'Monitor for pests and diseases'
-      ],
-      commonIssues: [
-        'Overwatering can cause root rot',
-        'Insufficient light may cause leggy growth',
-        'Watch for common pests'
-      ],
-      imageUrl: 'https://images.pexels.com/photos/4750270/pexels-photo-4750270.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+      description: '',
+      careInstructions: [],
+      commonIssues: [],
+      imageUrl: selectedImage || '',
       provider,
-      model: dualResponse?.[provider]?.model || 'unknown'
-    };
-
-    setResult(mockResult);
+      model: dualResponse?.[provider]?.model || 'unknown',
+      disease: parsed.disease || '',
+      diseaseExplanation: parsed.disease_explanation || '',
+      healthyConfirmation: parsed.healthy_confirmation || '',
+      careTips: Array.isArray(parsed.care_tips) ? parsed.care_tips : (parsed.care_tips ? [parsed.care_tips] : []),
+    });
     setDualResponse(null);
   };
 
@@ -178,28 +197,16 @@ export function PlantIdentify() {
                 <div className="text-center space-y-4">
                   <Button
                     size="lg"
-                    onClick={handleIdentify}
-                    disabled={isIdentifying}
+                    onClick={isSignedIn ? handleIdentify : undefined}
+                    disabled={isIdentifying || !isSignedIn}
                     isLoading={isIdentifying}
-                    className="group"
                   >
-                    {isIdentifying ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Analyzing with Both AI Models...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                        Identify Plant with Dual AI
-                      </>
-                    )}
+                    Identify
                   </Button>
-                  
-                  {isIdentifying && (
-                    <p className="text-sm text-gray-600">
-                      Getting analysis from OpenRouter and Gemini AI...
-                    </p>
+                  {!isSignedIn && (
+                    <SignInButton mode="modal">
+                      <Button variant="outline">Sign in to identify</Button>
+                    </SignInButton>
                   )}
                 </div>
               </div>
@@ -258,19 +265,28 @@ export function PlantIdentify() {
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">{result.name}</h3>
                       <p className="text-lg text-gray-600 italic">{result.scientificName}</p>
-                      <div className="mt-2 flex items-center space-x-2">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                          {result.confidence}% confidence
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Model: {result.model}
-                        </span>
-                      </div>
                     </div>
-                    
-                    <p className="text-gray-700 leading-relaxed">
-                      {result.description}
-                    </p>
+                    {result.disease ? (
+                      <>
+                        <div>
+                          <span className="font-semibold text-red-600">Disease Detected:</span> {result.disease}
+                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                          {result.diseaseExplanation}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-green-700 font-semibold">{result.healthyConfirmation}</div>
+                        {result.careTips.length > 0 && (
+                          <ul className="list-disc pl-5 mt-2 text-gray-700">
+                            {result.careTips.map((tip, idx) => (
+                              <li key={idx}>{tip}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Leaf, MessageCircle, Camera, MapPin, Users, BookOpen, User } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { UserButton, SignInButton, SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Leaf },
@@ -53,10 +54,17 @@ export function Header() {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/sign-in" />
+            </SignedIn>
             <Button size="sm">
               Get Started
             </Button>
@@ -97,10 +105,17 @@ export function Header() {
               );
             })}
             <div className="pt-4 border-t border-gray-200 space-y-2">
-              <Button variant="outline" className="w-full justify-center">
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="outline" className="w-full justify-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/sign-in" />
+              </SignedIn>
               <Button className="w-full justify-center">
                 Get Started
               </Button>
