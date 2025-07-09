@@ -35,13 +35,12 @@ export function Button({
   };
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
+    return React.cloneElement(children as React.ReactElement, {
       className: cn(
         baseStyles,
         variants[variant],
         sizes[size],
-        className,
-        children.props.className
+        className
       ),
       disabled: disabled || isLoading,
       ...props,

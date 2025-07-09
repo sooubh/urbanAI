@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { MapPin, Sun, Droplets, Ruler, Lightbulb, ArrowRight } from 'lucide-react';
+import { MapPin, Sun, Lightbulb } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useAI } from '../hooks/useAI';
-import { DualAIResponse } from '../services/aiOrchestrator';
 import { GARDEN_TYPES, SUNLIGHT_REQUIREMENTS } from '../utils/constants';
 import { useUser, SignInButton } from '@clerk/clerk-react';
+import { PlantLoadingAnimation } from '../components/ui/PlantLoadingAnimation';
 
 interface GardenPlanForm {
   gardenType: string;
@@ -44,8 +44,8 @@ export function GardenPlanner() {
   });
   const [recommendations, setRecommendations] = useState<PlantRecommendation[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [dualResponse, setDualResponse] = useState<DualAIResponse | null>(null);
-  const { generateDualResponse } = useAI({ type: 'planning' });
+  const [response, setResponse] = useState<{ text: string; model: string; provider: 'gemini'; error?: string } | null>(null); // Gemini response
+  const { generateResponse } = useAI({ type: 'planning' });
   const { isSignedIn } = useUser();
 
   const totalSteps = 4;
@@ -78,8 +78,12 @@ export function GardenPlanner() {
     try {
       const planningPrompt = `Create a detailed garden plan for the following specifications:\n\nGarden Type: ${formData.gardenType}\nDimensions: ${formData.dimensions.length} x ${formData.dimensions.width} ${formData.dimensions.unit}\nSunlight: ${formData.sunlightHours} hours daily\nLocation: ${formData.location}\nExperience Level: ${formData.experience}\nGoals: ${formData.goals.join(', ')}\n\nPlease provide:\n1. Specific plant recommendations with scientific names\n2. Spacing requirements for each plant\n3. Expected harvest times\n4. Care difficulty levels\n5. Benefits of each plant for urban gardening\n6. Layout suggestions for optimal space usage\n7. Seasonal planting schedule\n8. Companion planting recommendations\n\nFormat the response with clear sections and practical advice for urban gardening success.`;
 
-      const responses = await generateDualResponse(planningPrompt);
-      setDualResponse(responses);
+      const geminiResponse: string = await generateResponse(planningPrompt);
+      setResponse({
+        text: geminiResponse,
+        model: 'gemini',
+        provider: 'gemini',
+      });
     } catch (error: any) {
       console.error('Error generating garden plan:', error);
       // Handle error appropriately
@@ -88,7 +92,7 @@ export function GardenPlanner() {
     }
   };
 
-  const handleSelectPlan = (responseText: string, provider: 'openrouter' | 'gemini') => {
+  const handleSelectPlan = () => {
     // Parse the AI response and create mock recommendations
     // In a real implementation, you would parse the actual AI response
     const mockRecommendations: PlantRecommendation[] = [
@@ -131,7 +135,7 @@ export function GardenPlanner() {
     ];
 
     setRecommendations(mockRecommendations);
-    setDualResponse(null);
+    setResponse(null);
     setCurrentStep(5);
   };
 
@@ -355,22 +359,22 @@ export function GardenPlanner() {
         );
 
       case 5:
-        // Show dual response selector before final recommendations
-        if (dualResponse) {
+        // Show response selector before final recommendations
+        if (response) {
           return (
             <div className="space-y-6">
               <Card variant="elevated">
                 <CardHeader>
                   <CardTitle className="text-center text-2xl text-primary-600">
-                    Choose Your Garden Plan
+                    Review Gemini's Garden Plan
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-center text-gray-600 mb-6">
-                    Both AI models have analyzed your requirements. Choose your preferred garden plan:
+                    Gemini AI has analyzed your requirements. Review the plan below:
                   </p>
                   <AIResponseSelector
-                    responses={dualResponse}
+                    response={response}
                     onSelect={handleSelectPlan}
                   />
                 </CardContent>
@@ -453,7 +457,7 @@ export function GardenPlanner() {
                 onClick={() => {
                   setCurrentStep(1);
                   setRecommendations([]);
-                  setDualResponse(null);
+                  setResponse(null);
                   setFormData({
                     gardenType: '',
                     dimensions: { length: 0, width: 0, unit: 'ft' },
@@ -483,7 +487,7 @@ export function GardenPlanner() {
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold text-gray-900">Garden Planner</h1>
           <p className="text-lg text-gray-600">
-            Get personalized plant recommendations from both OpenRouter and Gemini AI
+            Get personalized plant recommendations from Gemini AI
           </p>
         </div>
 
@@ -506,8 +510,14 @@ export function GardenPlanner() {
         {/* Step Content */}
         {renderStep()}
 
+        {isGenerating && (
+          <div className="flex justify-center items-center py-8">
+            <PlantLoadingAnimation />
+          </div>
+        )}
+
         {/* Navigation */}
-        {currentStep <= 4 && !dualResponse && (
+        {currentStep <= 4 && !response && (
           <div className="flex justify-between">
             <Button
               variant="outline"
