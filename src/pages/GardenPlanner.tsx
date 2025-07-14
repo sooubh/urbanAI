@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useAI } from '../hooks/useAI';
 import { GARDEN_TYPES, SUNLIGHT_REQUIREMENTS } from '../utils/constants';
-import { useUser, SignInButton } from '@clerk/clerk-react';
 import { PlantLoadingAnimation } from '../components/ui/PlantLoadingAnimation';
 
 interface GardenPlanForm {
@@ -46,7 +45,6 @@ export function GardenPlanner() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [response, setResponse] = useState<{ text: string; model: string; provider: 'gemini'; error?: string } | null>(null); // Gemini response
   const { generateResponse } = useAI({ type: 'planning' });
-  const { isSignedIn } = useUser();
 
   const totalSteps = 4;
 
@@ -72,7 +70,6 @@ export function GardenPlanner() {
   };
 
   const generatePlan = async () => {
-    if (!isSignedIn) return;
     setIsGenerating(true);
     
     try {
@@ -343,17 +340,12 @@ export function GardenPlanner() {
             <CardContent className="space-y-6">
               <Button
                 size="lg"
-                onClick={isSignedIn ? generatePlan : undefined}
-                disabled={isGenerating || !isSignedIn}
+                onClick={generatePlan}
+                disabled={isGenerating}
                 isLoading={isGenerating}
               >
                 Generate Plan
               </Button>
-              {!isSignedIn && (
-                <SignInButton mode="modal">
-                  <Button variant="outline">Sign in to generate plan</Button>
-                </SignInButton>
-              )}
             </CardContent>
           </Card>
         );

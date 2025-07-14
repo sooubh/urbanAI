@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Leaf, MessageCircle, Camera, MapPin, Users, BookOpen, User } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { UserButton, SignInButton, SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Leaf },
@@ -26,7 +25,7 @@ export function Header() {
             <div className="p-2 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors duration-200">
               <Leaf className="h-6 w-6 text-primary-600" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Urban Harvest AI</span>
+            <span className="text-xl font-bold">Urban Harvest AI</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -34,7 +33,6 @@ export function Header() {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
-              
               return (
                 <Link
                   key={item.name}
@@ -52,19 +50,8 @@ export function Header() {
             })}
           </nav>
 
-          {/* User Menu */}
+          {/* User Menu - removed Clerk logic, just show Get Started button */}
           <div className="hidden md:flex items-center space-x-4">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/sign-in" />
-            </SignedIn>
             <Button size="sm">
               Get Started
             </Button>
@@ -87,7 +74,6 @@ export function Header() {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
-              
               return (
                 <Link
                   key={item.name}
@@ -104,22 +90,7 @@ export function Header() {
                 </Link>
               );
             })}
-            <div className="pt-4 border-t border-gray-200 space-y-2">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="outline" className="w-full justify-center">
-                    <User className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/sign-in" />
-              </SignedIn>
-              <Button className="w-full justify-center">
-                Get Started
-              </Button>
-            </div>
+            {/* Removed Clerk sign-in/out buttons for mobile */}
           </div>
         </div>
       )}

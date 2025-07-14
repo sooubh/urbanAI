@@ -6,7 +6,6 @@ import { Card } from '../components/ui/Card';
 import { AIResponseSelector } from '../components/ui/AIResponseSelector';
 import { useChat } from '../hooks/useChat';
 import { formatRelativeTime } from '../utils/helpers';
-import { useUser, SignInButton } from '@clerk/clerk-react';
 import { PlantLoadingAnimation } from '../components/ui/PlantLoadingAnimation';
 
 function renderFormattedText(text: string) {
@@ -35,7 +34,6 @@ export function Chat() {
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isSignedIn } = useUser();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,7 +41,7 @@ export function Chat() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading || !isSignedIn) return;
+    if (!inputValue.trim() || isLoading) return;
     await sendMessage(inputValue.trim());
     setInputValue('');
   };
@@ -51,7 +49,6 @@ export function Chat() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!isSignedIn) return;
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -177,7 +174,7 @@ export function Chat() {
               placeholder="Ask anything"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              disabled={isLoading || !isSignedIn}
+              disabled={isLoading}
               className="flex-1 bg-transparent outline-none border-none text-base px-2"
             />
             <input
@@ -186,12 +183,10 @@ export function Chat() {
               accept="image/*"
               onChange={handleFileUpload}
               className="hidden"
-              disabled={!isSignedIn}
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={!isSignedIn}
               className="ml-2 text-gray-400 hover:text-primary-600 transition"
               title="Upload image"
             >
@@ -199,7 +194,7 @@ export function Chat() {
             </button>
             <button
               type="submit"
-              disabled={isLoading || !isSignedIn || !inputValue.trim()}
+              disabled={isLoading || !inputValue.trim()}
               className="ml-2 text-primary-600 hover:text-primary-800 transition"
             >
               <Send className="h-5 w-5" />

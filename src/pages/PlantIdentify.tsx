@@ -3,7 +3,6 @@ import { Upload, Camera, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { useAI } from '../hooks/useAI';
-import { useUser, SignInButton } from '@clerk/clerk-react';
 import { PlantLoadingAnimation } from '../components/ui/PlantLoadingAnimation';
 
 interface IdentificationResult {
@@ -21,7 +20,6 @@ export function PlantIdentify() {
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { analyzeImage } = useAI({ type: 'identification' });
-  const { isSignedIn } = useUser();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,7 +34,7 @@ export function PlantIdentify() {
   };
 
   const handleIdentify = async () => {
-    if (!selectedImage || !isSignedIn) return;
+    if (!selectedImage) return;
     setIsIdentifying(true);
     try {
       const geminiResponse: string = await analyzeImage(
@@ -46,8 +44,7 @@ export function PlantIdentify() {
         - scientific_name
         - disease_name
         - disease_description
-        - treatment: { advice: [], avoid: [] }
-        Return ONLY JSON.`
+        - treatment: { advice: [], avoid: [] }`
       );
 
       let parsed: any = {};
@@ -149,11 +146,6 @@ export function PlantIdentify() {
                 <Button onClick={handleIdentify} disabled={isIdentifying} isLoading={isIdentifying}>
                   Identify
                 </Button>
-                {!isSignedIn && (
-                  <SignInButton mode="modal">
-                    <Button variant="outline" className="ml-2">Sign in to identify</Button>
-                  </SignInButton>
-                )}
               </div>
             </div>
           )}
