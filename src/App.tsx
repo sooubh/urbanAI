@@ -8,6 +8,11 @@ import { GardenPlanner } from './pages/GardenPlanner';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import Cookies from './pages/Cookies';
+import Community from './pages/community';
+import Blog from './pages/blog';
+import BlogPost from './pages/blogPost';
+import About from './pages/about';
+import Contact from './pages/contact';
 
 function App() {
   return (
@@ -21,8 +26,11 @@ function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/identify" element={<PlantIdentify />} />
           <Route path="/planner" element={<GardenPlanner />} />
-          <Route path="/community" element={<div className="min-h-screen flex items-center justify-center"><p className="text-xl text-gray-600">Community page coming soon!</p></div>} />
-          <Route path="/blog" element={<div className="min-h-screen flex items-center justify-center"><p className="text-xl text-gray-600">Blog page coming soon!</p></div>} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogPost />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </Layout>
     </Router>
