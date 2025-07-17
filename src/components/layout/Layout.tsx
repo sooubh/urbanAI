@@ -9,7 +9,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const hideFooter = location.pathname === '/chat';
+  const hideFooter = location.pathname === '/chat' || location.pathname === '/auth';
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />

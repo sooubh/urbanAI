@@ -13,6 +13,8 @@ import Blog from './pages/blog';
 import BlogPost from './pages/blogPost';
 import About from './pages/about';
 import Contact from './pages/contact';
+import Auth from './pages/Auth';
+import Profile from './pages/profile';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>
     </Router>

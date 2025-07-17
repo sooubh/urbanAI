@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MessageCircle, Camera, MapPin, Users, Sparkles, Leaf, Sun, Droplets, BookOpen } from 'lucide-react';
+import { ArrowRight, MessageCircle, Camera, MapPin, Users, Sparkles, Leaf, Sun, Droplets, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 const features = [
   {
@@ -63,6 +62,48 @@ const testimonials = [
     content: 'The personalized garden planning helped me maximize my indoor space. My plants have never been healthier!',
     avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
   },
+  {
+    name: 'Priya Patel',
+    role: 'Community Gardener',
+    content: 'I love connecting with other gardeners and sharing tips. The community hub is so welcoming!',
+    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Tom Müller',
+    role: 'Urban Farmer',
+    content: 'Urban Harvest AI made it easy to start growing my own food in the city. Highly recommend!',
+    avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Aisha Al-Farsi',
+    role: 'Sustainability Advocate',
+    content: 'The eco-friendly gardening tips are fantastic. My garden is greener and healthier than ever.',
+    avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Lucas Silva',
+    role: 'Balcony Botanist',
+    content: 'I never thought I could grow so much on my small balcony. The AI suggestions are spot on!',
+    avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Emily Nguyen',
+    role: 'Plant Parent',
+    content: 'The reminders and care tips keep my plants thriving. I feel like a real plant expert now!',
+    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Ahmed Hassan',
+    role: 'Rooftop Gardener',
+    content: 'The weather-based advice is so helpful. My rooftop garden has never looked better.',
+    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
+  {
+    name: 'Julia Rossi',
+    role: 'Urban Green Thumb',
+    content: 'Urban Harvest AI is a must-have for anyone who wants to garden in the city. Love it!',
+    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  },
 ];
 
 export function Home() {
@@ -116,6 +157,56 @@ export function Home() {
     { label: 'Success Rate', value: 94, display: '94%', color: 'bg-yellow-400' },
   ];
 
+  // Testimonials Carousel
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const getSlidesToShow = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 3;
+      if (window.innerWidth >= 640) return 2;
+    }
+    return 1;
+  };
+  const [slidesToShow, setSlidesToShow] = useState(getSlidesToShow());
+  const [animating, setAnimating] = useState(false);
+  useEffect(() => {
+    setAnimating(true);
+    const timeout = setTimeout(() => setAnimating(false), 400);
+    return () => clearTimeout(timeout);
+  }, [testimonialIndex, slidesToShow]);
+  useEffect(() => {
+    const handleResize = () => setSlidesToShow(getSlidesToShow());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const maxIndex = testimonials.length - slidesToShow;
+  const goPrev = () => setTestimonialIndex(i => Math.max(0, i - 1));
+  const goNext = () => setTestimonialIndex(i => Math.min(maxIndex, i + 1));
+  const visibleTestimonials = testimonials.slice(testimonialIndex, testimonialIndex + slidesToShow);
+
+  // Blog preview state
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [blogLoading, setBlogLoading] = useState(true);
+  const [blogError, setBlogError] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      setBlogLoading(true);
+      setBlogError(null);
+      const { data, error } = await supabase
+        .from('blog_post')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (error) {
+        setBlogError('Failed to load blog posts.');
+        setBlogPosts([]);
+      } else {
+        setBlogPosts(data || []);
+      }
+      setBlogLoading(false);
+    };
+    fetchBlogPosts();
+  }, []);
+
   return (
     <div className="space-y-24 bg-gradient-to-b from-white via-primary-50 to-secondary-50">
       {/* Hero Section */}
@@ -136,9 +227,11 @@ export function Home() {
               Transform any urban space into a thriving garden with personalized AI guidance, plant identification, and a supportive community of fellow gardeners.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="group shadow-lg">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+              <Button size="lg" className="group shadow-lg" asChild>
+                <Link to="/auth">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                </Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="shadow-lg">
                 <Link to="/chat">Try AI Assistant</Link>
@@ -255,23 +348,46 @@ export function Home() {
           <h2 className="text-4xl font-extrabold text-primary-700">Loved by Urban Gardeners</h2>
           <p className="text-xl text-gray-600">See what our community has to say about their gardening journey</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {testimonials.map((testimonial) => (
-            <Card key={testimonial.name} variant="elevated" className="text-center bg-white/90 rounded-2xl shadow-xl border-0 p-6 flex flex-col items-center">
-              <CardContent className="pt-6 flex flex-col items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-4 border-primary-100 shadow-lg"
-                />
-                <p className="text-gray-600 mb-4 italic text-lg max-w-xs">"{testimonial.content}"</p>
-                <div>
-                  <div className="font-semibold text-gray-900 text-lg">{testimonial.name}</div>
-                  <div className="text-sm text-gray-500">{testimonial.role}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="relative max-w-5xl mx-auto">
+          <button
+            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-10 disabled:opacity-30"
+            onClick={goPrev}
+            disabled={testimonialIndex === 0}
+            aria-label="Previous testimonials"
+          >
+            <ChevronLeft className="h-6 w-6 text-green-700" />
+          </button>
+          <div className="flex gap-8 justify-center">
+            {visibleTestimonials.map((testimonial, idx) => (
+              <Card
+                key={testimonial.name}
+                variant="elevated"
+                className={`text-center bg-white/90 rounded-2xl shadow-xl border-0 p-6 flex flex-col items-center w-full max-w-xs transition-all duration-500 ease-in-out
+                  ${animating ? 'opacity-0 translate-y-8' : 'opacity-100 translate-y-0'}`}
+              >
+                <CardContent className="pt-6 flex flex-col items-center">
+                  <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-4 border-primary-100 shadow-lg"
+                  />
+                  <p className="text-gray-600 mb-4 italic text-lg max-w-xs">"{testimonial.content}"</p>
+                  <div>
+                    <div className="font-semibold text-gray-900 text-lg">{testimonial.name}</div>
+                    <div className="text-sm text-gray-500">{testimonial.role}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <button
+            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white rounded-full shadow p-2 z-10 disabled:opacity-30"
+            onClick={goNext}
+            disabled={testimonialIndex === maxIndex}
+            aria-label="Next testimonials"
+          >
+            <ChevronRight className="h-6 w-6 text-green-700" />
+          </button>
         </div>
       </section>
 
@@ -288,9 +404,11 @@ export function Home() {
               in their city spaces with AI-powered guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="group shadow-lg">
-                Start Growing Today
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+              <Button size="lg" variant="secondary" className="group shadow-lg" asChild>
+                <Link to="/auth">
+                  Start Growing Today
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                </Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary-600 shadow-lg">
                 Watch Demo
@@ -302,87 +420,6 @@ export function Home() {
 
       {/* Section Divider */}
       <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
-
-      {/* Quick Links Section - visually prominent */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center gap-8">
-          <div className="space-y-2 w-full text-center">
-            <h2 className="text-2xl font-bold text-primary-700">Quick Links</h2>
-            <p className="text-gray-600">Jump directly to our most popular features and resources:</p>
-          </div>
-          <div className="flex flex-wrap gap-4 justify-center w-full">
-            <Link to="/chat" className="inline-flex items-center px-5 py-3 bg-primary-600 text-white rounded-lg font-medium shadow hover:bg-primary-700 transition">
-              <MessageCircle className="h-5 w-5 mr-2" /> AI Assistant
-            </Link>
-            <Link to="/identify" className="inline-flex items-center px-5 py-3 bg-green-600 text-white rounded-lg font-medium shadow hover:bg-green-700 transition">
-              <Camera className="h-5 w-5 mr-2" /> Plant ID
-            </Link>
-            <Link to="/planner" className="inline-flex items-center px-5 py-3 bg-purple-600 text-white rounded-lg font-medium shadow hover:bg-purple-700 transition">
-              <MapPin className="h-5 w-5 mr-2" /> Garden Planner
-            </Link>
-            <Link to="/community" className="inline-flex items-center px-5 py-3 bg-orange-600 text-white rounded-lg font-medium shadow hover:bg-orange-700 transition">
-              <Users className="h-5 w-5 mr-2" /> Community
-            </Link>
-            <Link to="/blog" className="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-lg font-medium shadow hover:bg-blue-700 transition">
-              <BookOpen className="h-5 w-5 mr-2" /> Blog
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* About/Why Choose Us Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-primary-700">Why Choose Urban Harvest AI?</h2>
-            <p className="text-gray-700 text-lg">
-              Urban Harvest AI is the leading platform for city dwellers who want to grow their own food, beautify their spaces, and connect with a vibrant gardening community. Our AI-driven tools make gardening accessible for everyone, from beginners to experts.
-            </p>
-            <ul className="list-disc pl-6 text-gray-700">
-              <li>Personalized, expert gardening advice 24/7</li>
-              <li>Instant plant identification and care tips</li>
-              <li>Custom garden planning for any space</li>
-              <li>Weather-based reminders and smart notifications</li>
-              <li>Active, supportive community and blog resources</li>
-            </ul>
-            <p className="text-gray-600 text-base">
-              Start your journey to a greener, healthier, and more sustainable urban lifestyle today!
-            </p>
-          </div>
-          <div className="flex justify-center">
-            <img src="https://images.pexels.com/photos/450326/pexels-photo-450326.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Urban gardening tools and plants" className="rounded-2xl shadow-xl w-full max-w-md" />
-          </div>
-        </div>
-      </section>
-
-      {/* Blog Highlights Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-primary-700">From Our Blog</h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Explore the latest tips, guides, and inspiration for urban gardening, plant care, and sustainable living.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Example blog cards - replace with dynamic content if available */}
-          <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <img src="https://images.pexels.com/photos/461382/pexels-photo-461382.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop" alt="Balcony garden inspiration" className="rounded-lg mb-4 h-40 object-cover" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">10 Balcony Garden Ideas for Small Spaces</h3>
-            <p className="text-gray-600 flex-1">Maximize your urban space with creative container gardening, vertical planters, and easy-to-grow edible plants. Learn how to turn any balcony into a lush retreat.</p>
-            <Link to="/blog" className="mt-4 text-primary-600 font-medium hover:underline">Read More</Link>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <img src="https://images.pexels.com/photos/212324/pexels-photo-212324.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop" alt="Plant care tips" className="rounded-lg mb-4 h-40 object-cover" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Essential Plant Care Tips for Beginners</h3>
-            <p className="text-gray-600 flex-1">Discover the basics of watering, sunlight, soil, and pest management. Our AI assistant answers your most common plant care questions.</p>
-            <Link to="/blog" className="mt-4 text-primary-600 font-medium hover:underline">Read More</Link>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <img src="https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop" alt="Community gardening" className="rounded-lg mb-4 h-40 object-cover" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">How to Start a Community Garden in Your City</h3>
-            <p className="text-gray-600 flex-1">Step-by-step guide to organizing, funding, and growing a successful community garden. Connect with neighbors and make a positive impact.</p>
-            <Link to="/blog" className="mt-4 text-primary-600 font-medium hover:underline">Read More</Link>
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Section - visually improved, now with accordion */}
       <section className="max-w-5xl mx-auto px-4 py-16 animate-fade-in">
@@ -413,78 +450,75 @@ export function Home() {
         </div>
       </section>
 
-      {/* SEO Content Section - indexable, keyword-rich, visually unobtrusive */}
-      <section className="max-w-5xl mx-auto px-4 py-16 animate-fade-in">
-        <div className="bg-white/90 rounded-3xl shadow-2xl border border-primary-100 p-10 md:p-16 flex flex-col gap-10 items-center relative overflow-hidden">
-          <div className="absolute -top-10 -left-10 opacity-10 pointer-events-none select-none">
-            <Leaf className="w-40 h-40 text-primary-200" />
+      {/* About & Features Zig-Zag Section */}
+      <section className="w-full bg-gradient-to-b from-green-50 via-white to-green-100 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-primary-700 mb-4">About Urban Harvest AI</h2>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto">Urban Harvest AI empowers city dwellers to create and maintain thriving urban gardens. Whether you have a balcony, rooftop, backyard, or indoor space, our AI-powered assistant provides expert advice, plant identification, and personalized planning tailored to your unique environment.</p>
           </div>
-          <div className="w-full flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-1 space-y-6">
-              <h2 className="text-3xl md:text-4xl font-extrabold text-primary-700 flex items-center gap-3">
-                <Sparkles className="h-8 w-8 text-primary-400" />
-                About Urban Harvest AI: Your Urban Gardening Companion
-              </h2>
-              <p className="text-gray-700 text-lg">
-                Urban Harvest AI is an innovative platform dedicated to empowering city dwellers to create and maintain thriving urban gardens. Whether you have a balcony, rooftop, backyard, or indoor space, our AI-powered gardening assistant provides expert advice, plant identification, and personalized garden planning tailored to your unique environment. Our mission is to make urban gardening accessible, sustainable, and enjoyable for everyone.
-              </p>
+          {/* Zig-Zag Features */}
+          <div className="space-y-24">
+            {/* Feature 1 */}
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+            
+              <div className="flex-1 order-1 lg:order-2 flex justify-center">
+                <img src="https://images.pexels.com/photos/3076899/pexels-photo-3076899.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="AI Gardening Assistant" className="rounded-3xl shadow-xl w-full max-w-md border-4 border-green-100" />
+              </div>
+              <div className="flex-1 order-2 lg:order-1">
+                <h3 className="text-3xl font-bold text-green-800 mb-4">AI Gardening Assistant</h3>
+                <p className="text-lg text-gray-700 mb-4">Get instant answers to your gardening questions, from plant care and pest control to soil health and watering schedules.</p>
+              </div>
             </div>
-            <div className="flex-1 flex justify-center">
-              <img src="https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop" alt="Urban gardening illustration" className="rounded-2xl shadow-xl w-64 h-64 object-cover border-4 border-primary-100" />
+            {/* Feature 2 */}
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              <div className="flex-1 order-2 lg:order-2">
+                <h3 className="text-3xl font-bold text-green-800 mb-4">Plant Identification</h3>
+                <p className="text-lg text-gray-700 mb-4">Upload photos to identify plants and receive detailed care instructions, including scientific names and disease diagnosis.</p>
+              </div>
+              <div className="flex-1 order-1 lg:order-1 flex justify-center">
+                <img src="https://images.pexels.com/photos/461382/pexels-photo-461382.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Plant Identification" className="rounded-3xl shadow-xl w-full max-w-md border-4 border-green-100" />
+              </div>
+            </div>
+            {/* Feature 3 */}
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              
+              <div className="flex-1 order-1 lg:order-2 flex justify-center">
+                <img src="https://images.pexels.com/photos/450326/pexels-photo-450326.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Personalized Garden Planner" className="rounded-3xl shadow-xl w-full max-w-md border-4 border-green-100" />
+              </div>
+              <div className="flex-1 order-2 lg:order-1">
+                <h3 className="text-3xl font-bold text-green-800 mb-4">Personalized Garden Planner</h3>
+                <p className="text-lg text-gray-700 mb-4">Receive custom plant recommendations and layout suggestions based on your space, sunlight, and goals.</p>
+              </div>
+            </div>
+            {/* Feature 4 */}
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              <div className="flex-1 order-2 lg:order-2">
+                <h3 className="text-3xl font-bold text-green-800 mb-4">Community Hub</h3>
+                <p className="text-lg text-gray-700 mb-4">Connect with fellow urban gardeners, share tips, and learn from a growing community passionate about sustainable city living.</p>
+              </div>
+              <div className="flex-1 order-1 lg:order-1 flex justify-center">
+                <img src="https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Community Hub" className="rounded-3xl shadow-xl w-full max-w-md border-4 border-green-100" />
+              </div>
+            </div>
+            {/* Feature 5 */}
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              <div className="flex-1 order-1 lg:order-2 flex justify-center">
+                <img src="https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Weather-Based Tips" className="rounded-3xl shadow-xl w-full max-w-md border-4 border-green-100" />
+              </div>
+              <div className="flex-1 order-2 lg:order-1">
+                <h3 className="text-3xl font-bold text-green-800 mb-4">Weather-Based Tips</h3>
+                <p className="text-lg text-gray-700 mb-4">Get AI-generated reminders and advice based on your local climate and forecast.</p>
+              </div>
             </div>
           </div>
-          <div className="w-full">
-            <h3 className="text-2xl font-bold text-primary-700 mb-6 flex items-center gap-2">
-              <Sun className="h-6 w-6 text-yellow-400" /> Key Features of Urban Harvest AI
+          {/* Why Urban Gardening */}
+          <div className="mt-24 text-center max-w-4xl mx-auto">
+            <h3 className="text-3xl font-bold text-primary-700 mb-4 flex items-center justify-center gap-2">
+              <Leaf className="h-8 w-8 text-green-400" /> Why Choose Urban Gardening?
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="flex items-start gap-4">
-                <MessageCircle className="h-8 w-8 text-blue-500 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold text-lg text-gray-900">AI Gardening Assistant</div>
-                  <div className="text-gray-700">Get instant answers to your gardening questions, from plant care and pest control to soil health and watering schedules.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <Camera className="h-8 w-8 text-green-500 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold text-lg text-gray-900">Plant Identification</div>
-                  <div className="text-gray-700">Upload photos to identify plants and receive detailed care instructions, including scientific names and disease diagnosis.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <MapPin className="h-8 w-8 text-purple-500 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold text-lg text-gray-900">Personalized Garden Planner</div>
-                  <div className="text-gray-700">Receive custom plant recommendations and layout suggestions based on your space, sunlight, and goals.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <Users className="h-8 w-8 text-orange-500 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold text-lg text-gray-900">Community Hub</div>
-                  <div className="text-gray-700">Connect with fellow urban gardeners, share tips, and learn from a growing community passionate about sustainable city living.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <Sun className="h-8 w-8 text-yellow-400 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold text-lg text-gray-900">Weather-Based Tips</div>
-                  <div className="text-gray-700">Get AI-generated reminders and advice based on your local climate and forecast.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="w-full">
-            <h3 className="text-2xl font-bold text-primary-700 mb-4 flex items-center gap-2">
-              <Leaf className="h-6 w-6 text-green-400" /> Why Choose Urban Gardening?
-            </h3>
-            <p className="text-gray-700 text-lg mb-2">
-              Urban gardening transforms unused city spaces into productive, green environments. Benefits include improved air quality, access to fresh produce, stress reduction, and fostering a sense of community. With the help of AI, even beginners can achieve gardening success and contribute to a more sustainable urban future.
-            </p>
-          </div>
-          <div className="w-full text-center mt-6">
-            <p className="text-primary-700 text-xl font-semibold">Start your urban gardening journey today with Urban Harvest AI – the smart way to grow in the city.</p>
+            <p className="text-gray-700 text-lg mb-2">Urban gardening transforms unused city spaces into productive, green environments. Benefits include improved air quality, access to fresh produce, stress reduction, and fostering a sense of community. With the help of AI, even beginners can achieve gardening success and contribute to a more sustainable urban future.</p>
+            <p className="text-primary-700 text-xl font-semibold mt-6">Start your urban gardening journey today with Urban Harvest AI – the smart way to grow in the city.</p>
           </div>
         </div>
       </section>

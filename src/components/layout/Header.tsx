@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Leaf, MessageCircle, Camera, MapPin, Users, BookOpen, User } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { supabase } from '../../services/supabaseClient';
+import { FaChevronDown } from 'react-icons/fa';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Leaf },
@@ -14,7 +16,29 @@ const navigation = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    getUser();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setDropdownOpen(false);
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -52,9 +76,66 @@ export function Header() {
 
           {/* User Menu - removed Clerk logic, just show Get Started button */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button size="sm">
-              Get Started
-            </Button>
+            {!user ? (
+              <>
+                <Button size="sm" asChild>
+                  <Link to="/auth?tab=login">Login</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/auth">Get Started</Link>
+                </Button>
+              </>
+            ) : (
+              <div className="relative flex items-center">
+                <button
+                  className="flex items-center space-x-2 focus:outline-none"
+                  onClick={() => setDropdownOpen((open) => !open)}
+                >
+                  <img
+                    src={user.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=' + (user.email || 'U')}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full border border-gray-300"
+                  />
+                  <FaChevronDown className="text-gray-600" />
+                </button>
+                {dropdownOpen && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 bg-black bg-opacity-20 z-40"
+                      onClick={() => setDropdownOpen(false)}
+                    />
+                    {/* Popup */}
+                    <div className="fixed top-20 right-8 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-fade-in flex flex-col">
+                      <div className="flex flex-col items-center px-4 pt-4 pb-2 border-b border-gray-100">
+                        <img
+                          src={user.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=' + (user.email || 'U')}
+                          alt="Profile"
+                          className="w-12 h-12 rounded-full border border-gray-200 mb-2"
+                        />
+                        <div className="font-semibold text-gray-900 text-base truncate w-full text-center">{user.user_metadata?.full_name || user.email}</div>
+                        <div className="text-xs text-gray-500 truncate w-full text-center">{user.email}</div>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className="block px-6 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition rounded-t-xl text-center"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-center px-6 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition rounded-b-xl border-t border-gray-100"
+                        >
+                          Log Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
