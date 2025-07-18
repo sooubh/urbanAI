@@ -342,6 +342,7 @@ export function Home() {
 
       {/* Section Divider */}
       <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
+      <AdComponent adSlot="1274151626" />
 
       {/* Testimonials Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-8 py-20 animate-fade-in">
