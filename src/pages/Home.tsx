@@ -4,6 +4,7 @@ import { ArrowRight, MessageCircle, Camera, MapPin, Users, Sparkles, Leaf, Sun, 
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { supabase } from '../services/supabaseClient';
+import AdComponent from '../components/AdComponent';
 
 const features = [
   {
@@ -318,7 +319,7 @@ export function Home() {
 
       {/* Section Divider */}
       <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
-
+      <AdComponent adSlot="4917883161" />
       {/* Stats Section as Progress Bars */}
       <section className="relative overflow-hidden shadow-inner bg-primary-50 py-20 animate-fade-in">
         <div className="max-w-3xl mx-auto px-4">
