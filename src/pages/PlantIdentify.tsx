@@ -151,7 +151,6 @@ export function PlantIdentify() {
           )}
         </CardContent>
       </Card>
-
       {isIdentifying && (
         <div className="flex justify-center items-center py-8">
           <PlantLoadingAnimation />
