@@ -209,9 +209,9 @@ export function Home() {
   }, []);
 
   return (
-    <div className="space-y-24 bg-gradient-to-b from-white via-primary-50 to-secondary-50">
+    <div className="space-y-12 bg-gradient-to-b from-white via-primary-50 to-secondary-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-24 md:py-32 bg-gradient-to-br from-primary-50 via-white to-secondary-100 border-b border-gray-100">
+      <section className="relative overflow-hidden py-12 md:py-16 bg-gradient-to-br from-primary-50 via-white to-secondary-100 border-b border-gray-100">
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-8 flex flex-col lg:flex-row items-center gap-16">
           <div className="flex-1 space-y-8 animate-fade-in">
@@ -278,7 +278,7 @@ export function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
         <div className="text-center space-y-6 mb-20">
           <h2 className="text-4xl font-extrabold text-primary-700 tracking-tight">Everything You Need to Succeed</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -318,10 +318,10 @@ export function Home() {
       </section>
 
       {/* Section Divider */}
-      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
+      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-6 rounded-full opacity-60" />
       <AdComponent adSlot="4917883161" />
       {/* Stats Section as Progress Bars */}
-      <section className="relative overflow-hidden shadow-inner bg-primary-50 py-20 animate-fade-in">
+      <section className="relative overflow-hidden shadow-inner bg-primary-50 py-10 animate-fade-in">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-3xl font-extrabold text-primary-700 mb-10 text-center">Our Impact</h2>
           <div className="space-y-10">
@@ -341,11 +341,11 @@ export function Home() {
       </section>
 
       {/* Section Divider */}
-      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
+      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-6 rounded-full opacity-60" />
       <AdComponent adSlot="1274151626" />
 
       {/* Testimonials Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-20 animate-fade-in">
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-10 animate-fade-in">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl font-extrabold text-primary-700">Loved by Urban Gardeners</h2>
           <p className="text-xl text-gray-600">See what our community has to say about their gardening journey</p>
@@ -394,11 +394,11 @@ export function Home() {
       </section>
 
       {/* Section Divider */}
-      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
+      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-6 rounded-full opacity-60" />
 
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white animate-fade-in">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
           <div className="text-center space-y-8">
             <h2 className="text-4xl font-extrabold">Ready to Start Your Urban Garden?</h2>
             <p className="text-xl text-primary-100 max-w-2xl mx-auto">
@@ -421,10 +421,10 @@ export function Home() {
       </section>
 
       {/* Section Divider */}
-      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-12 rounded-full opacity-60" />
+      <div className="w-full h-1 bg-gradient-to-r from-primary-100 via-white to-secondary-100 my-6 rounded-full opacity-60" />
 
       {/* FAQ Section - visually improved, now with accordion */}
-      <section className="max-w-5xl mx-auto px-4 py-16 animate-fade-in">
+      <section className="max-w-5xl mx-auto px-4 py-8 animate-fade-in">
         <div className="mb-10 text-center">
           <h2 className="text-4xl font-extrabold text-primary-700">Frequently Asked Questions</h2>
           <p className="text-gray-600 text-lg">Find answers to common questions about urban gardening, our AI tools, and the Urban Harvest AI platform.</p>
@@ -453,14 +453,14 @@ export function Home() {
       </section>
 
       {/* About & Features Zig-Zag Section */}
-      <section className="w-full bg-gradient-to-b from-green-50 via-white to-green-100 py-20">
+      <section className="w-full bg-gradient-to-b from-green-50 via-white to-green-100 py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <h2 className="text-4xl md:text-5xl font-extrabold text-primary-700 mb-4">About Urban Harvest AI</h2>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto">Urban Harvest AI empowers city dwellers to create and maintain thriving urban gardens. Whether you have a balcony, rooftop, backyard, or indoor space, our AI-powered assistant provides expert advice, plant identification, and personalized planning tailored to your unique environment.</p>
           </div>
           {/* Zig-Zag Features */}
-          <div className="space-y-24">
+          <div className="space-y-12">
             {/* Feature 1 */}
             <div className="flex flex-col lg:flex-row items-center gap-12">
             
@@ -515,7 +515,7 @@ export function Home() {
             </div>
           </div>
           {/* Why Urban Gardening */}
-          <div className="mt-24 text-center max-w-4xl mx-auto">
+          <div className="mt-12 text-center max-w-4xl mx-auto">
             <h3 className="text-3xl font-bold text-primary-700 mb-4 flex items-center justify-center gap-2">
               <Leaf className="h-8 w-8 text-green-400" /> Why Choose Urban Gardening?
             </h3>
